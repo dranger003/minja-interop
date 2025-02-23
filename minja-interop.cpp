@@ -8,16 +8,14 @@
 #define API
 #endif
 
-namespace std
-{
-	const char* strdup(const std::string& s) {
+
+const char* __strdup(const std::string& s) {
 #ifdef _WIN32
-		auto copy = _strdup(s.c_str());
+	auto copy = _strdup(s.c_str());
 #else
-		auto copy = strdup(s.c_str());
+	auto copy = strdup(s.c_str());
 #endif
-		return copy;
-	}
+	return copy;
 }
 
 struct ApplyResult {
@@ -47,7 +45,7 @@ extern "C"
 			};
 
 			auto prompt = tmpl.apply(inputs);
-			auto str = std::strdup(prompt.c_str());
+			auto str = __strdup(prompt.c_str());
 
 			if (!str) {
 				return ApplyResult{ nullptr, "Memory allocation failed." };
@@ -56,7 +54,7 @@ extern "C"
 			return ApplyResult{ str, nullptr };
 		}
 		catch (const std::exception& e) {
-			return ApplyResult{ nullptr, std::strdup(e.what()) };
+			return ApplyResult{ nullptr, __strdup(e.what()) };
 		}
 		catch (...) {
 			return ApplyResult{ nullptr, "Unknown error occurred." };
