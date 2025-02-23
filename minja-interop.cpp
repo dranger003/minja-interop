@@ -44,7 +44,7 @@ extern "C"
 			};
 
 			auto prompt = tmpl.apply(inputs);
-			auto str = __strdup(prompt.c_str());
+			auto str = __strdup(prompt);
 
 			if (!str) {
 				return ApplyResult{ nullptr, "Memory allocation failed." };
