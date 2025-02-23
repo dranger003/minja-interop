@@ -8,7 +8,6 @@
 #define API
 #endif
 
-
 const char* __strdup(const std::string& s) {
 #ifdef _WIN32
 	auto copy = _strdup(s.c_str());
