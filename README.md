@@ -140,6 +140,23 @@ var messages = new[]
     },
 };
 
-var prompt = MinjaInterop.Apply(source, messages);
+var tools = new[]
+{
+    new
+    {
+        Type = "function",
+        Function = new
+        {
+            Name = "google_search",
+            Description = "Search Google",
+            Parameters = new Dictionary<string, object>
+            {
+                ["query"] = "2+2",
+            },
+        },
+    },
+};
+
+var prompt = MinjaInterop.Apply(source, messages, tools);
 Console.WriteLine(prompt);
 ```
