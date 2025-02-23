@@ -47,7 +47,7 @@ extern "C"
 			auto str = __strdup(prompt);
 
 			if (!str) {
-				return ApplyResult{ nullptr, "Memory allocation failed." };
+				return ApplyResult{ nullptr, __strdup("Memory allocation failed.") };
 			}
 
 			return ApplyResult{ str, nullptr };
@@ -56,12 +56,13 @@ extern "C"
 			return ApplyResult{ nullptr, __strdup(e.what()) };
 		}
 		catch (...) {
-			return ApplyResult{ nullptr, "Unknown error occurred." };
+			return ApplyResult{ nullptr, __strdup("Unknown error occurred.") };
 		}
 	}
 
 	EXPORT void API FreeApplyResult(ApplyResult res)
 	{
 		if (res.str) std::free((void*)res.str);
+		if (res.err) std::free((void*)res.err);
 	}
 }
