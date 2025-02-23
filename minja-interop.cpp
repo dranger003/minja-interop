@@ -2,13 +2,32 @@
 
 #ifdef _WIN32
     #define EXPORT __declspec(dllexport)
+    #define API __stdcall
 #else
     #define EXPORT __attribute__((visibility("default")))
+    #define API
 #endif
+
+namespace std
+{
+    const char* strdup(const std::string& s) {
+#ifdef _WIN32
+        auto copy = _strdup(s.c_str());
+#else
+        auto copy = strdup(s.c_str());
+#endif
+        return copy;
+    }
+}
+
+struct ApplyResult {
+    const char* str;
+    const char* err;
+};
 
 extern "C"
 {
-    EXPORT const char* apply_str(
+    EXPORT ApplyResult API ApplyStr(
         const char* source,
         const char* messages,
         const char* tools,
@@ -17,26 +36,35 @@ extern "C"
         const char* bos_token,
         const char* eos_token)
     {
-        auto tmpl = minja::chat_template(source, bos_token, eos_token);
+        try {
+            auto tmpl = minja::chat_template(source, bos_token, eos_token);
 
-        auto inputs = minja::chat_template_inputs{
-            json::parse(messages),
-            json::parse(tools),
-            add_generation_prompt,
-            json::parse(extra_context),
-        };
+            auto inputs = minja::chat_template_inputs{
+                json::parse(messages),
+                json::parse(tools),
+                add_generation_prompt,
+                json::parse(extra_context),
+            };
 
-        auto prompt = tmpl.apply(inputs);
+            auto prompt = tmpl.apply(inputs);
+            auto str = std::strdup(prompt.c_str());
 
-        auto size = prompt.size() + 1;
-        auto str = new char[size];
-        std::memset(str, 0, size);
-        std::memcpy(str, prompt.c_str(), size - 1);
+            if (!str) {
+                return ApplyResult{nullptr, "Memory allocation failed."};
+            }
 
-        return str;
+            return ApplyResult{str, nullptr};
+        }
+        catch (const std::exception& e) {
+            return ApplyResult{nullptr, std::strdup(e.what())};
+        }
+        catch (...) {
+            return ApplyResult{nullptr, "Unknown error occurred."};
+        }
     }
 
-    EXPORT void free_str(const char* str) {
-        if (str) delete [] str;
+    EXPORT void API FreeStr(void* str)
+    {
+        if (str) std::free(str);
     }
 }
